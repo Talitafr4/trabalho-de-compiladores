@@ -1,0 +1,21 @@
+-- Este é um teste do analisador lexico.
+inicio
+    int a;
+    float b;
+    string nome;
+
+    a = 10 + 25;
+    b = a / 3.14;
+    nome = "Ola Mundo! \n";
+
+    --[[
+       Comentario de multiplas linhas.
+       Pode ter o que quiser aqui dentro.
+    ]]
+
+    if (a > b) {
+        print("a eh maior");
+    } else {
+        read(b);
+    }
+fim
