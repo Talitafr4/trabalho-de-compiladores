@@ -4,6 +4,8 @@
  * E PODERÁ SER UTILIZADO COMO PONTO DE PARTIDA PARA IMPLEMENTAÇÃO DO ANALISADOR LÉXICO PARA LINGUAGEM ADOTADA NO TRABALHO PROPOSTO.
  * */
 
+#include <vector>
+
 #include <exception> // Necessário para std::exception
 #include <iostream>  // Necessário para std::cerr
 
@@ -12,27 +14,35 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <string>
+#include <map>
 
 //NOME TOKENS
-#define INICIO 255
-#define IF  256
-#define THEN  257
-#define ELSE  258
-#define RELOP  259
-#define ID  260
-#define NUM  261
-#define FIM 268
-#define FLOAT 269
-#define STRING_TYPE 270
-#define WHILE 271
-#define READ 272
-#define PRINT 273
-#define INT 274
-#define ATR 275
-#define SUB 276
-#define ADD 277
-#define MUL 278
-#define DIV 279
+#define INICIO 255 // int atributo = -1
+#define IF  256 // int atributo = -1
+#define THEN  257 // int atributo = -1
+#define ELSE  258 // int atributo = -1
+#define RELOP  259 // int atributo = LT, LE, EQ, NE, GT, GE
+#define ID  260	// int atributo = -1
+#define NUM  261 // int ou float
+#define FIM 268 // int atributo = -1
+#define FLOAT 269 // int pra atributo 
+#define STRING_TYPE 270 // int atributo = -1 e string para o q tem valor
+#define WHILE 271 // int atributo = -1
+#define READ 272 // int atributo = -1
+#define PRINT 273 // int atributo = -1
+#define INT 274 // int atributo = -1
+#define ATR 275  // int atributo = -1
+#define SUB 276 // int atributo = -1
+#define ADD 277	// int atributo = -1
+#define MUL 278 // int atributo = -1
+#define DIV 279 // int atributo = -1
+#define PONTO_VIRGULA 280 // int atributo = -1
+#define VIRGULA 281 // int atributo = -1
+#define ABRE_PARENTESES 282 // int atributo = -1
+#define FECHA_PARENTESES 283 // int atributo = -1
+#define ABRE_CHAVES 284 // int atributo = -1
+#define FECHA_CHAVES 285 // int atributo = -1
 
 
 //ATRIBUTOS
@@ -44,6 +54,7 @@
 #define GE 267
 
 
+std::map<std::string,int> lista_ids; // lista de identificadores
 
 struct Token{
  int nome_token;
@@ -57,7 +68,7 @@ struct Token{
 
 
 int estado = 0;
-int partida = 0;
+int partida = -1; //segurança
 int cont_sim_lido = 0;
 int valor_lexico;
 char *code;
@@ -102,9 +113,13 @@ int falhar()
 {
 	switch(estado)
 	{
-	case 0: partida = 9; break;
+	case 0: partida = 0; printf("Eu não fui identificado aa\n"); break; exit(EXIT_FAILURE);
 
-	case 9: partida = 12; break;
+	case 9:{ 
+		partida = 9; 
+		printf("Erro: identificador muito longo\n");
+		}
+		break;
 
 	case 12: partida = 20; break;
 
@@ -129,21 +144,32 @@ Token proximo_token()
 	static int count_id = 0;
 	Token token;
 	char c;
+	static int estado = 0;
+	static int cont_sim_lido = 0;
+	//printf("Caracter: %s\n", code);
+	//fflush(stdout);
 	while(code[cont_sim_lido] != '\0')
 	{
+		
+		
 		switch(estado)
 		{
 			case 0:{ //estado inicial
 				c = code[cont_sim_lido];
-				if (isspace(c)) 
+				if (isspace(c) || c == '\n') 
 				{
-					estado = 0;
-					cont_sim_lido++;
+					estado = 25;
 				}
 				else if(c == '<') estado = 1;
 				else if(c == '=') estado = 5;
 				else if(c == '>') estado = 6;
 				else if(c == '"') estado = 10;
+				else if(c == ';') estado = 21;
+				else if(c == ',') estado = 22;
+				else if(c == '(') estado = 23;
+				else if(c == ')') estado = 24;
+				else if( c == '{') estado = 26;
+				else if( c == '}') estado = 27;
 				else if((c == '-') && code[cont_sim_lido + 1] == ' '){ // subtração
 					estado = 15;
 
@@ -163,12 +189,17 @@ Token proximo_token()
 				else if( c == '-') {
 					int avante = cont_sim_lido + 1;
 					if(code[avante] == '-'){
-						if((code[avante+1] == '[') && code[avante+2] == '['){
+						
+						avante++;
+						
+						if((code[avante] == '[') && code[avante+1] == '['){
+							
 							//long comment
 							estado = 14;
 
 						}
 						else{
+							
 							estado = 13;
 							//short comment
 						}
@@ -180,6 +211,8 @@ Token proximo_token()
 				else
 					{
 					 estado = falhar();
+					 
+					 break;
 					}
 				}
 				break;
@@ -273,17 +306,27 @@ Token proximo_token()
 			
 			case 9: {// identificador
 				c = code[cont_sim_lido];
-				char palavra[50];
+				char palavra[32];
 				int i = 0;
 				
-				while (isalpha(code[cont_sim_lido]) || isdigit(code[cont_sim_lido]) ) {
-					if(isspace(code[cont_sim_lido])){
-						cont_sim_lido++;
+				while (isalpha(code[cont_sim_lido]) || isdigit(code[cont_sim_lido]) || code[cont_sim_lido]=='_') {
+					if( i<31){
+						palavra[i] = code[cont_sim_lido];
+						
+					}
+					else{
+						// Excedeu tamanho máximo do identificador
+						//printf("Erro: identificador muito longo\n");
+						
+						partida = 9;
+						falhar();
 						break;
 					}
-					palavra[i++] = code[cont_sim_lido++];
+					i++;
+					cont_sim_lido++;
 				}
 				palavra[i] = '\0';
+				//printf("Identificador completo: %s \n", palavra);
 
 				
 				// Verifica palavras-chave
@@ -334,10 +377,38 @@ Token proximo_token()
 					printf("<PRINT>\n");
 				}
 				else {
-					count_id++;
-					printf("<id, %d>, %30s\n", count_id, palavra);
-					token.nome_token = ID;
-					token.atributo.s_atributo = strdup(palavra);
+					if(partida != 9){
+						std::string lexema(palavra);
+						if(lista_ids.count(lexema) > 0){
+							// simbolo existente já
+							int id_atributo = lista_ids[lexema];
+							//token.nome_token = ID;
+							//token.atributo.i_atributo = id_atributo;
+							printf("<id, %d>,\n", id_atributo);
+							token.nome_token = ID;
+							token.atributo.i_atributo = id_atributo;
+							estado = 0;
+							
+						}
+						else{
+							count_id++;
+							lista_ids[lexema] = count_id;
+							token.nome_token = ID;
+							token.atributo.i_atributo = count_id;
+							//printf("Novo id adicionado: %s com atributo %d\n", palavra, count_id);
+							printf("<id, %d>\n", count_id);
+							estado = 0;
+						}
+						return token;
+						
+						
+						
+					}
+					else{
+						estado = 9;
+						//printf("falhei %s\n e caracter %c\n", palavra, code[cont_sim_lido]);
+						falhar();
+					}
 				}
 
 				token.atributo.i_atributo = -1;
@@ -357,7 +428,6 @@ Token proximo_token()
 				string_texto[j++] = code[cont_sim_lido++];
 				while(true){
 					if(cont_asp == 2){
-						cont_sim_lido++;
 						break;
 					}
 					if(code[cont_sim_lido] == '"'){
@@ -369,8 +439,7 @@ Token proximo_token()
 				string_texto[j] = '\0';
 				token.nome_token = STRING_TYPE;
 				token.atributo.s_atributo = strdup(string_texto);
-				printf("<STRING_TYPE, {%s}>\n", token.atributo.s_atributo);
-				
+				printf("<STRING_TYPE, %s>\n", token.atributo.s_atributo);
 				
 				estado = 0;
 				return token;
@@ -405,7 +474,7 @@ Token proximo_token()
 					else if(c == '.'){
 						cont_ponto++;
 						if(cont_ponto > 1){
-							printf(" ERRO: ponto flutuante com dois pontos");
+							//printf(" ERRO: ponto flutuante com dois pontos");
 							break;
 						}
 						numero[j++] = c;
@@ -419,14 +488,14 @@ Token proximo_token()
 				}
 				numero[j] = '\0';
 				if( cont_ponto==1){
-					token.nome_token = FLOAT;
+					token.nome_token = NUM;
 					token.atributo.f_atributo = atof(numero);
-					printf("<float, %f>", token.atributo.f_atributo);
+					printf("<float, %f>\n", token.atributo.f_atributo);
 				}
 				else if(cont_ponto==0){
-					token.nome_token = INT;
+					token.nome_token = NUM;
 					token.atributo.i_atributo = atoi(numero);
-					printf("<int, %d>", token.atributo.i_atributo);
+					printf("<int, %d>\n", token.atributo.i_atributo);
 				}
 				
 				
@@ -438,15 +507,20 @@ Token proximo_token()
 			case 13:{ // short comment
 				while(code[cont_sim_lido]!= '\n'){
 					cont_sim_lido++;
+					
 				}
 				estado = 0;
+				
 				}
 				break;
 			case 14:{ // long comment
 				cont_sim_lido += 4;
 				while(code[cont_sim_lido] != '\0'){
+					
 					if((code[cont_sim_lido]==']') && (code[cont_sim_lido+1]==']')){
+				
 						cont_sim_lido+= 2;
+						
 						estado = 0;
 						break;
 					}
@@ -513,33 +587,101 @@ Token proximo_token()
 			}
 				break;
 
+			case 21:{ // estado para o símbolo ;
+				cont_sim_lido++;
+				printf("<;,>\n");
+				token.nome_token = PONTO_VIRGULA;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return token;
+			}
+				break;
 				/*implementar ações para os estados 21-24*/
 
-			case 25:{
+			case 22:{ // estado para o símbolo ,
+				cont_sim_lido++;
+				printf("<',',>\n");
+				token.nome_token = VIRGULA;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return token;
+
+			}
+				break;
+			case 23:{ // estado para o símbolo (
+				cont_sim_lido++;
+				printf("<(,>\n");
+				token.nome_token = ABRE_PARENTESES;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return token;
+			}
+				break;
+
+			case 24:{ // estado para o símbolo )
+				cont_sim_lido++;
+				printf("<),>\n");
+				token.nome_token = FECHA_PARENTESES;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return token;
+			}
+				break;
+
+			case 25:{ // espaço e quebra de linha
 				c = code[cont_sim_lido];
-				if((c == ' ')||(c == '\n'))
+				if((c == ' '))
 				{
+					//printf(" ");
+					estado = 0;
+					cont_sim_lido++;
+				}
+				else if(c == '\n'){
+					//printf("\n");
 					estado = 0;
 					cont_sim_lido++;
 				}
 				else
 				{
 					/*implementar ações referentes aos estado */
-					estado = falhar();
-					token.nome_token = -1;
-					token.atributo.i_atributo = -1;
-					return(token);
+					//estado = falhar();
+					estado = 0;
+					//token.nome_token = -1;
+					//token.atributo.i_atributo = -1;
+					//return(token);
 				}
 			}
 				break;
 			
+			case 26:{ // estado para o símbolo {
+				cont_sim_lido++;
+				printf("<{,>\n");
+				token.nome_token = ABRE_CHAVES;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return(token);
+			}
+				break;
+
+			case 27:{ // estado para o símbolo }
+				cont_sim_lido++;
+				printf("<},>\n");
+				token.nome_token = FECHA_CHAVES;
+				token.atributo.i_atributo = -1;
+				estado = 0;
+				return(token);
+			}
+				break;
+
 			default:
-				printf("Erro do compilador");
+				//printf("Erro do compilador");
+				falhar();
 		}
 
 
 	}
 	token.nome_token = EOF;
+	token.atributo.i_atributo = -1;
 	return(token);
 }
 
@@ -574,39 +716,32 @@ int main ()
 {
     try {
         Token token;
-        printf("Tentando ler programa.txt...\n");
+        
         
         // 1. Remova a linha "Exception e;" - Ela causa erro de compilação.
         
         code = readFile("programa.txt");
 
-		printf("%s\n", code);
-        // DICA IMPORTANTE: printf guarda dados no buffer. 
-        // Se o programa travar logo depois, o texto não aparece.
-        // Use fflush(stdout) para forçar o texto a aparecer.
-        printf("Arquivo lido. Verificando ponteiro...\n"); 
+
         fflush(stdout); 
 
         if(code == NULL)
         {
-            printf("Não foi possível abrir o arquivo.\n");
+            //printf("Não foi possível abrir o arquivo.\n");
             return 1;
         }
 
-        printf("Arquivo lido com sucesso!\n");
-        printf("Iniciando análise léxica...\n");
-        fflush(stdout); 
+        fflush(stdout);
 
-        do{
-			printf("Lendo token na posicao %d...", cont_sim_lido); 
-    		fflush(stdout);
-            token = proximo_token();
-			printf(" Sucesso. Token: %d aaaaaa\n", token.nome_token);
-    		fflush(stdout);
-            // Debug para ver onde ele trava:
-            // printf("Token lido: %d\n", token.nome_token);
-            // fflush(stdout);
-        } while((token.nome_token != EOF));
+	do{
+		fflush(stdout);
+		token = proximo_token();
+		//printf("\n");
+		fflush(stdout);
+		
+	} while((token.nome_token != EOF));
+	
+	//printf("Análise léxica concluída com sucesso!\n");
 
     } 
     // Captura exceções padrão do C++ (ex: falta de memória no 'new')
@@ -619,6 +754,7 @@ int main ()
     catch (...) {
         std::cerr << "\n\n!!! ERRO DESCONHECIDO !!!\n";
         std::cerr << "Ocorreu uma falha não identificada.\n";
+		
         return 1;
     }
 
