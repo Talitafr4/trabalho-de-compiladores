@@ -1,5 +1,5 @@
 ## Compilar o programa e gerar o executável no windows
-g++ programa_principal2.cpp -o programa
+g++ -std=c++11 programa_analisador_adap.cpp -o compilador
 
 ## Executar o programa
-.\programa.exe >tokens.txt
+./compilador.exe
