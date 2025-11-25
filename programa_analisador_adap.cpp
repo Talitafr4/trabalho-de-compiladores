@@ -105,11 +105,18 @@ int falhar()
     {
     case 0:{ partida = 0; printf("item não reconhecido pelo analisador léxico na linha %d\n", num_linha); exit(EXIT_FAILURE);} break;
 
-    case 9:{
+    case 9:{ // identificador muito longo
         partida = 9;
         printf("Erro: identificador muito longo\n");
         }
         break;
+
+    case 10: {
+        partida = 10;
+        printf("Erro: string muito longa ou não fechada\n");
+        exit(EXIT_FAILURE);
+        break;
+    }
 
     case 12: partida = 20; break;
 
@@ -141,7 +148,7 @@ Token proximo_token()
     {
         switch(estado)
         {
-            case 0:{
+            case 0:{ // estado inicial
                 c = code[cont_sim_lido];
                 if (isspace(c) || c == '\n')
                 {
@@ -177,7 +184,7 @@ Token proximo_token()
                             estado = 14;
                         }
                         else{
-                            estado = 13;
+                            estado = 13; 
                         }
                     }
                 }
@@ -191,7 +198,7 @@ Token proximo_token()
             }
             break;
 
-            case 1:{
+            case 1:{ // intermediário para relop LE, NE ou LT
                 cont_sim_lido++;
                 c = code[cont_sim_lido];
                 if(c == '=') estado = 2;
@@ -200,7 +207,7 @@ Token proximo_token()
             }
             break;
 
-            case 2:{
+            case 2:{ // relop LE
                 cont_sim_lido++;
                 printf("<relop, LE>\n");
                 token.nome_token = RELOP;
@@ -210,7 +217,7 @@ Token proximo_token()
             }
             break;
 
-            case 3:{
+            case 3:{ // relop NE
                 cont_sim_lido++;
                 printf("<relop, NE>\n");
                 token.nome_token = RELOP;
@@ -220,7 +227,7 @@ Token proximo_token()
             }
             break;
 
-            case 4:{
+            case 4:{ // relop LT
                 cont_sim_lido++;
                 printf("<relop, LT>\n");
                 token.nome_token = RELOP;
@@ -230,7 +237,7 @@ Token proximo_token()
             }
             break;
 
-            case 5:{
+            case 5:{ // intermediário para relop EQ ou ATR, esse reconhece ATR
                 cont_sim_lido++;
                 c=code[cont_sim_lido];
                 if(c == '='){
@@ -247,7 +254,7 @@ Token proximo_token()
             }
             break;
 
-            case 6:{
+            case 6:{ // intermediário para relop GT ou GE
                 cont_sim_lido++;
                 c = code[cont_sim_lido];
                 if(c == '=') estado = 7;
@@ -255,7 +262,7 @@ Token proximo_token()
             }
             break;
 
-            case 7:{
+            case 7:{ // relop GE
                 cont_sim_lido++;
                 printf("<relop, GE>\n");
                 token.nome_token = RELOP;
@@ -265,7 +272,7 @@ Token proximo_token()
             }
             break;
 
-            case 8:{
+            case 8:{ // relop GT
                 cont_sim_lido++;
                 printf("<relop, GT>\n");
                 token.nome_token = RELOP;
@@ -275,7 +282,7 @@ Token proximo_token()
             }
             break;
 
-            case 9:{
+            case 9:{ // identificador ou palavra reservada
                 c = code[cont_sim_lido];
                 char palavra[32];
                 int i = 0;
@@ -366,7 +373,7 @@ Token proximo_token()
             }
             break;
 
-            case 10:{
+            case 10:{ // string
                 char string_texto[400];
                 int j = 0;
                 int cont_asp = 1;
@@ -375,17 +382,40 @@ Token proximo_token()
                     if(cont_asp == 2){
                         break;
                     }
-                    if(code[cont_sim_lido] == '"'){
+                    else if(code[cont_sim_lido] == '"'){
                         cont_asp++;
+                        string_texto[j++] = code[cont_sim_lido++];
                     }
-                    string_texto[j++] = code[cont_sim_lido++];
+                    else if(code[cont_sim_lido] == ';'){ // tentativa de tratar string não fechada
+                        printf("Erro: string não fechada na linha %d\n", num_linha);
+                        break;
+                    }
+                    
+                    else if(j>=399) {
+                        partida = 10;
+                        falhar();
+                        break;
+                    }
+
+                    else if(code[cont_sim_lido] == '\0'){
+                        partida = 10;
+                        falhar();
+                        break;
+                    }
+                    else{
+                        string_texto[j++] = code[cont_sim_lido++];
+                    }
+                    
                 }
-                string_texto[j] = '\0';
-                token.nome_token = STRING_TYPE;
-                token.atributo.s_atributo = strdup(string_texto);
-                printf("<STRING_TYPE, %s>\n", token.atributo.s_atributo);
-                estado = 0;
-                return token;
+                if(partida != 10){
+                    string_texto[j] = '\0';
+                    token.nome_token = STRING_TYPE;
+                    token.atributo.s_atributo = strdup(string_texto);
+                    printf("<STRING_TYPE, %s>\n", token.atributo.s_atributo);
+                    estado = 0;
+                    return token;
+                }
+                
             }
             break;
 
