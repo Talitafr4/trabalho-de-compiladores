@@ -419,7 +419,7 @@ Token proximo_token()
             }
             break;
 
-            case 11:{
+            case 11:{ // relop EQ
                 cont_sim_lido++;
                 printf("<relop, EQ>\n");
                 token.nome_token = RELOP;
@@ -429,7 +429,7 @@ Token proximo_token()
             }
             break;
 
-            case 12:{
+            case 12:{ // número (int ou float)
                 char numero[30];
                 int j = 0;
                 int cont_ponto = 0;
@@ -469,7 +469,7 @@ Token proximo_token()
             }
             break;
 
-            case 13:{
+            case 13:{  // comentário de linha
                 while(code[cont_sim_lido]!= '\n'){
                     cont_sim_lido++;
                 }
@@ -477,7 +477,7 @@ Token proximo_token()
             }
             break;
 
-            case 14:{
+            case 14:{ // comentário longo
                 cont_sim_lido += 4;
                 while(code[cont_sim_lido] != '\0'){
                     if (code[cont_sim_lido] == '\n') {  // Conta linhas dentro do comentário
@@ -498,7 +498,7 @@ Token proximo_token()
             }
             break;
 
-            case 15:{
+            case 15:{ // operador subtração
                 cont_sim_lido++;
                 printf("<-,>\n");
                 token.nome_token = SUB;
@@ -508,7 +508,7 @@ Token proximo_token()
             }
             break;
 
-            case 16:{
+            case 16:{ // operador adição
                 cont_sim_lido++;
                 printf("<+,>\n");
                 token.nome_token = ADD;
@@ -518,7 +518,7 @@ Token proximo_token()
             }
             break;
 
-            case 17:{
+            case 17:{ // operador multiplicação
                 cont_sim_lido++;
                 printf("<*,>\n");
                 token.nome_token = MUL;
@@ -528,7 +528,7 @@ Token proximo_token()
             }
             break;
 
-            case 18:{
+            case 18:{ // operador divisão
                 cont_sim_lido++;
                 printf("</,>\n");
                 token.nome_token = DIV;
@@ -538,21 +538,8 @@ Token proximo_token()
             }
             break;
 
-            case 20:{
-                c = code[cont_sim_lido];
-                if((c == ' ')||(c == '\n'))
-                {
-                    estado = 0;
-                    cont_sim_lido++;
-                }
-                else
-                {
-                    estado = falhar();
-                }
-            }
-            break;
 
-            case 21:{
+            case 21:{ // ponto e vírgula
                 cont_sim_lido++;
                 printf("<;,>\n");
                 token.nome_token = PONTO_VIRGULA;
@@ -562,7 +549,7 @@ Token proximo_token()
             }
             break;
 
-            case 22:{
+            case 22:{ // vírgula
                 cont_sim_lido++;
                 printf("<',',>\n");
                 token.nome_token = VIRGULA;
@@ -572,7 +559,7 @@ Token proximo_token()
             }
             break;
 
-            case 23:{
+            case 23:{ // abre parênteses
                 cont_sim_lido++;
                 printf("<(,>\n");
                 token.nome_token = ABRE_PARENTESES;
@@ -582,7 +569,7 @@ Token proximo_token()
             }
             break;
 
-            case 24:{
+            case 24:{ // fecha parênteses
                 cont_sim_lido++;
                 printf("<),>\n");
                 token.nome_token = FECHA_PARENTESES;
@@ -592,7 +579,7 @@ Token proximo_token()
             }
             break;
 
-            case 25:{
+            case 25:{ // espaço em branco ou nova linha
                 c = code[cont_sim_lido];
                 if((c == ' '))
                 {
@@ -611,7 +598,7 @@ Token proximo_token()
             }
             break;
 
-            case 26:{
+            case 26:{ // abre chaves
                 cont_sim_lido++;
                 printf("<{,>\n");
                 token.nome_token = ABRE_CHAVES;
@@ -621,7 +608,7 @@ Token proximo_token()
             }
             break;
 
-            case 27:{
+            case 27:{ // fecha chaves
                 cont_sim_lido++;
                 printf("<},>\n");
                 token.nome_token = FECHA_CHAVES;
@@ -635,7 +622,7 @@ Token proximo_token()
                 falhar();
         }
     }
-    token.nome_token = EOF;
+    token.nome_token = EOF; // fim do arquivo
     token.atributo.i_atributo = -1;
     return(token);
 }
